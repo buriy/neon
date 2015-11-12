@@ -618,13 +618,14 @@ class Linear(ParameterLayer):
 
     def fprop(self, inputs, inference=False):
         self.inputs = inputs
-        self.be.compound_dot(A=self.W, B=self.inputs, C=self.outputs, bsum=self.batch_sum)
+        self.dev_inputs = inputs.reshape((self.nin, -1))
+        self.be.compound_dot(A=self.W, B=self.dev_inputs, C=self.outputs, bsum=self.batch_sum)
         return self.outputs
 
     def bprop(self, error, alpha=1.0, beta=0.0):
         if self.deltas:
             self.be.compound_dot(A=self.W.T, B=error, C=self.deltas, alpha=alpha, beta=beta)
-        self.be.compound_dot(A=error, B=self.inputs.T, C=self.dW)
+        self.be.compound_dot(A=error, B=self.dev_inputs.T, C=self.dW)
         return self.deltas
 
 
